@@ -1,0 +1,21 @@
+type GameReleased @entity(immutable: false) {
+  id: ID!
+  requestId: BigInt!
+  playerAddress: Bytes!
+  payout: BigInt!
+  randomNumber: BigInt!
+  x: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type VaultSnapshot @entity(immutable: false) {
+  id: ID!
+  totalAssets: BigInt!
+  totalSupply: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  day: BigInt!
+}

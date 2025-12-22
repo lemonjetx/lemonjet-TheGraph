@@ -1,0 +1,12 @@
+{
+  "base-sepolia": {
+    "LemonJetProxy": {
+      "address": "0x6eB3cc8D24232B179B14f3140956AaeDc96946bb",
+      "startBlock": 34804864
+    },
+    "LemonJetGame": {
+      "address": "0x0b5A1539A26DaDBD9c84670e39b5C6E7387B9B00",
+      "startBlock": 34804864
+    }
+  }
+}
