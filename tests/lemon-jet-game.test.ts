@@ -15,7 +15,7 @@ import {
   createWithdrawEvent
 } from "./lemon-jet-game-utils"
 
-const PROXY_ADDRESS = Address.fromString("0x6eB3cc8D24232B179B14f3140956AaeDc96946bb")
+const PROXY_ADDRESS = Address.fromString("0x28f4df2bd04587f0fd979117f46af9cf1f03ddc2")
 
 describe("LemonJetGame Event Handlers", () => {
   beforeAll(() => {

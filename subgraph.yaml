@@ -8,9 +8,9 @@ dataSources:
     name: LemonJetGame
     network: base-sepolia
     source:
-      address: "0x6eB3cc8D24232B179B14f3140956AaeDc96946bb"
+      address: "0x28f4df2bd04587f0fd979117f46af9cf1f03ddc2"
       abi: LemonJetGame
-      startBlock: 34804864
+      startBlock: 35399000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.8
