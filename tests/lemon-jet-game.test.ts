@@ -7,10 +7,11 @@ import {
   afterAll,
   createMockedFunction
 } from "matchstick-as"
-import { Address, BigInt, ethereum, Bytes } from "@graphprotocol/graph-ts"
-import { handleGameReleased, handleDeposit, handleWithdraw } from "../src/lemon-jet-game"
+import {Address, BigInt, ethereum, Bytes} from "@graphprotocol/graph-ts"
+import {handleGameReleased, handleGameStarted, handleDeposit, handleWithdraw} from "../src/lemon-jet-game"
 import {
   createGameReleasedEvent,
+  createGameStartedEvent,
   createDepositEvent,
   createWithdrawEvent
 } from "./lemon-jet-game-utils"
@@ -25,7 +26,7 @@ describe("LemonJetGame Event Handlers", () => {
       "totalAssets():(uint256)"
     )
       .returns([ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(1000000))])
-    
+
     createMockedFunction(
       PROXY_ADDRESS,
       "totalSupply",
@@ -330,6 +331,105 @@ describe("LemonJetGame Event Handlers", () => {
 
     assert.entityCount("GameReleased", 2)
     assert.entityCount("VaultSnapshot", 2)
+  })
+
+  test("handleGameStarted creates GameStarted entity", () => {
+    clearStore()
+
+    let requestId = BigInt.fromI32(1)
+    let playerAddress = Address.fromString("0x0000000000000000000000000000000000000001")
+    let bet = BigInt.fromI32(5000)
+    let coef = BigInt.fromI32(200)
+
+    let gameStartedEvent = createGameStartedEvent(
+      requestId,
+      playerAddress,
+      bet,
+      coef
+    )
+
+    gameStartedEvent.block.number = BigInt.fromI32(100)
+    gameStartedEvent.block.timestamp = BigInt.fromI32(1000)
+    gameStartedEvent.transaction.hash = Bytes.fromHexString("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef")
+    gameStartedEvent.logIndex = BigInt.fromI32(0)
+
+    handleGameStarted(gameStartedEvent)
+
+    let gameStartedId =
+      gameStartedEvent.block.number.toI32().toString() +
+      "-" +
+      gameStartedEvent.logIndex.toI32().toString()
+
+    assert.entityCount("GameStarted", 1)
+    assert.fieldEquals(
+      "GameStarted",
+      gameStartedId,
+      "requestId",
+      requestId.toString()
+    )
+    assert.fieldEquals(
+      "GameStarted",
+      gameStartedId,
+      "playerAddress",
+      playerAddress.toHexString()
+    )
+    assert.fieldEquals("GameStarted", gameStartedId, "bet", bet.toString())
+    assert.fieldEquals("GameStarted", gameStartedId, "coef", coef.toString())
+    assert.fieldEquals(
+      "GameStarted",
+      gameStartedId,
+      "blockNumber",
+      gameStartedEvent.block.number.toString()
+    )
+    assert.fieldEquals(
+      "GameStarted",
+      gameStartedId,
+      "blockTimestamp",
+      gameStartedEvent.block.timestamp.toString()
+    )
+    assert.fieldEquals(
+      "GameStarted",
+      gameStartedId,
+      "transactionHash",
+      gameStartedEvent.transaction.hash.toHexString()
+    )
+  })
+
+  test("handleGameStarted with multiple events creates multiple entities", () => {
+    clearStore()
+
+    let requestId1 = BigInt.fromI32(1)
+    let requestId2 = BigInt.fromI32(2)
+    let playerAddress = Address.fromString("0x0000000000000000000000000000000000000001")
+    let bet = BigInt.fromI32(5000)
+    let coef = BigInt.fromI32(200)
+
+    let event1 = createGameStartedEvent(
+      requestId1,
+      playerAddress,
+      bet,
+      coef
+    )
+    event1.block.number = BigInt.fromI32(100)
+    event1.block.timestamp = BigInt.fromI32(1000)
+    event1.transaction.hash = Bytes.fromHexString("0x1111111111111111111111111111111111111111111111111111111111111111")
+    event1.logIndex = BigInt.fromI32(0)
+
+    let event2 = createGameStartedEvent(
+      requestId2,
+      playerAddress,
+      bet,
+      coef
+    )
+    event2.block.number = BigInt.fromI32(101)
+    event2.block.timestamp = BigInt.fromI32(2000)
+    event2.transaction.hash = Bytes.fromHexString("0x2222222222222222222222222222222222222222222222222222222222222222")
+    event2.logIndex = BigInt.fromI32(0)
+
+    handleGameStarted(event1)
+    handleGameStarted(event2)
+
+    assert.entityCount("GameStarted", 2)
   })
 })
 

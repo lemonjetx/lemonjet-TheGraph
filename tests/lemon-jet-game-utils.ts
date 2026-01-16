@@ -2,6 +2,7 @@ import { newMockEvent } from "matchstick-as"
 import { ethereum, Address, BigInt } from "@graphprotocol/graph-ts"
 import {
   GameReleased,
+  GameStarted,
   Deposit,
   Withdraw
 } from "../generated/LemonJetGame/LemonJetGame"
@@ -43,6 +44,38 @@ export function createGameReleasedEvent(
   )
 
   return gameReleasedEvent
+}
+
+export function createGameStartedEvent(
+  requestId: BigInt,
+  player: Address,
+  bet: BigInt,
+  coef: BigInt
+): GameStarted {
+  let gameStartedEvent = changetype<GameStarted>(newMockEvent())
+
+  gameStartedEvent.parameters = []
+
+  gameStartedEvent.parameters.push(
+    new ethereum.EventParam(
+      "requestId",
+      ethereum.Value.fromUnsignedBigInt(requestId)
+    )
+  )
+  gameStartedEvent.parameters.push(
+    new ethereum.EventParam(
+      "player",
+      ethereum.Value.fromAddress(player)
+    )
+  )
+  gameStartedEvent.parameters.push(
+    new ethereum.EventParam("bet", ethereum.Value.fromUnsignedBigInt(bet))
+  )
+  gameStartedEvent.parameters.push(
+    new ethereum.EventParam("coef", ethereum.Value.fromUnsignedBigInt(coef))
+  )
+
+  return gameStartedEvent
 }
 
 export function createDepositEvent(
