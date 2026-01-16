@@ -17,6 +17,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - GameReleased
+        - GameStarted
         - VaultSnapshot
       abis:
         - name: LemonJetGame
@@ -24,6 +25,8 @@ dataSources:
       eventHandlers:
         - event: GameReleased(indexed uint256,indexed address,uint256,uint256,uint256)
           handler: handleGameReleased
+        - event: GameStarted(indexed uint256,indexed address,uint256,uint256)
+          handler: handleGameStarted
         - event: Deposit(indexed address,indexed address,uint256,uint256)
           handler: handleDeposit
         - event: Withdraw(indexed address,indexed address,indexed address,uint256,uint256)

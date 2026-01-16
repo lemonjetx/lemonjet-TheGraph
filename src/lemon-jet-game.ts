@@ -1,9 +1,10 @@
 import {
   GameReleased as GameReleasedEvent,
+  GameStarted as GameStartedEvent,
   Deposit as DepositEvent,
   Withdraw as WithdrawEvent
 } from "../generated/LemonJetGame/LemonJetGame"
-import { GameReleased, VaultSnapshot } from "../generated/schema"
+import { GameReleased, GameStarted, VaultSnapshot } from "../generated/schema"
 import { LemonJetGame } from "../generated/LemonJetGame/LemonJetGame"
 import { Address, ethereum, BigInt } from "@graphprotocol/graph-ts"
 
@@ -49,6 +50,20 @@ export function handleGameReleased(event: GameReleasedEvent): void {
   gameEntity.save()
 
   saveVaultSnapshot(event)
+}
+
+export function handleGameStarted(event: GameStartedEvent): void {
+  let gameId = event.block.number.toI32().toString() + "-" + event.logIndex.toI32().toString()
+
+  let gameEntity = new GameStarted(gameId)
+  gameEntity.requestId = event.params.requestId
+  gameEntity.playerAddress = event.params.player
+  gameEntity.bet = event.params.bet
+  gameEntity.coef = event.params.coef
+  gameEntity.blockNumber = event.block.number
+  gameEntity.blockTimestamp = event.block.timestamp
+  gameEntity.transactionHash = event.transaction.hash
+  gameEntity.save()
 }
 
 export function handleDeposit(event: DepositEvent): void {

@@ -10,6 +10,17 @@ type GameReleased @entity(immutable: false) {
   transactionHash: Bytes!
 }
 
+type GameStarted @entity(immutable: false) {
+  id: ID!
+  requestId: BigInt!
+  playerAddress: Bytes!
+  bet: BigInt!
+  coef: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
 type VaultSnapshot @entity(immutable: false) {
   id: ID!
   totalAssets: BigInt!
