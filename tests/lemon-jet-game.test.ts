@@ -39,7 +39,7 @@ describe("LemonJetGame Event Handlers", () => {
     clearStore()
   })
 
-  test("handleGameReleased creates GameReleased entity and VaultSnapshot", () => {
+  test("handleGameReleased creates Game entity and VaultSnapshot", () => {
     clearStore()
 
     let requestId = BigInt.fromI32(1)
@@ -63,42 +63,39 @@ describe("LemonJetGame Event Handlers", () => {
 
     handleGameReleased(gameReleasedEvent)
 
-    let gameReleasedId =
-      gameReleasedEvent.block.number.toI32().toString() +
-      "-" +
-      gameReleasedEvent.logIndex.toI32().toString()
+    let gameId = requestId.toString()
 
-    assert.entityCount("GameReleased", 1)
+    assert.entityCount("Game", 1)
     assert.fieldEquals(
-      "GameReleased",
-      gameReleasedId,
+      "Game",
+      gameId,
       "requestId",
       requestId.toString()
     )
     assert.fieldEquals(
-      "GameReleased",
-      gameReleasedId,
+      "Game",
+      gameId,
       "playerAddress",
       playerAddress.toHexString()
     )
-    assert.fieldEquals("GameReleased", gameReleasedId, "payout", payout.toString())
+    assert.fieldEquals("Game", gameId, "payout", payout.toString())
     assert.fieldEquals(
-      "GameReleased",
-      gameReleasedId,
+      "Game",
+      gameId,
       "randomNumber",
       randomNumber.toString()
     )
-    assert.fieldEquals("GameReleased", gameReleasedId, "x", x.toString())
+    assert.fieldEquals("Game", gameId, "x", x.toString())
     assert.fieldEquals(
-      "GameReleased",
-      gameReleasedId,
-      "blockNumber",
+      "Game",
+      gameId,
+      "releasedBlockNumber",
       gameReleasedEvent.block.number.toString()
     )
     assert.fieldEquals(
-      "GameReleased",
-      gameReleasedId,
-      "blockTimestamp",
+      "Game",
+      gameId,
+      "releasedBlockTimestamp",
       gameReleasedEvent.block.timestamp.toString()
     )
 
@@ -285,7 +282,7 @@ describe("LemonJetGame Event Handlers", () => {
     handleGameReleased(event1)
     handleGameReleased(event2)
 
-    assert.entityCount("GameReleased", 2)
+    assert.entityCount("Game", 2)
     assert.entityCount("VaultSnapshot", 1)
   })
 
@@ -329,11 +326,11 @@ describe("LemonJetGame Event Handlers", () => {
     handleGameReleased(event1)
     handleGameReleased(event2)
 
-    assert.entityCount("GameReleased", 2)
+    assert.entityCount("Game", 2)
     assert.entityCount("VaultSnapshot", 2)
   })
 
-  test("handleGameStarted creates GameStarted entity", () => {
+  test("handleGameStarted creates Game entity", () => {
     clearStore()
 
     let requestId = BigInt.fromI32(1)
@@ -355,42 +352,39 @@ describe("LemonJetGame Event Handlers", () => {
 
     handleGameStarted(gameStartedEvent)
 
-    let gameStartedId =
-      gameStartedEvent.block.number.toI32().toString() +
-      "-" +
-      gameStartedEvent.logIndex.toI32().toString()
+    let gameId = requestId.toString()
 
-    assert.entityCount("GameStarted", 1)
+    assert.entityCount("Game", 1)
     assert.fieldEquals(
-      "GameStarted",
-      gameStartedId,
+      "Game",
+      gameId,
       "requestId",
       requestId.toString()
     )
     assert.fieldEquals(
-      "GameStarted",
-      gameStartedId,
+      "Game",
+      gameId,
       "playerAddress",
       playerAddress.toHexString()
     )
-    assert.fieldEquals("GameStarted", gameStartedId, "bet", bet.toString())
-    assert.fieldEquals("GameStarted", gameStartedId, "coef", coef.toString())
+    assert.fieldEquals("Game", gameId, "bet", bet.toString())
+    assert.fieldEquals("Game", gameId, "coef", coef.toString())
     assert.fieldEquals(
-      "GameStarted",
-      gameStartedId,
-      "blockNumber",
+      "Game",
+      gameId,
+      "startedBlockNumber",
       gameStartedEvent.block.number.toString()
     )
     assert.fieldEquals(
-      "GameStarted",
-      gameStartedId,
-      "blockTimestamp",
+      "Game",
+      gameId,
+      "startedBlockTimestamp",
       gameStartedEvent.block.timestamp.toString()
     )
     assert.fieldEquals(
-      "GameStarted",
-      gameStartedId,
-      "transactionHash",
+      "Game",
+      gameId,
+      "startedTransactionHash",
       gameStartedEvent.transaction.hash.toHexString()
     )
   })
@@ -429,7 +423,62 @@ describe("LemonJetGame Event Handlers", () => {
     handleGameStarted(event1)
     handleGameStarted(event2)
 
-    assert.entityCount("GameStarted", 2)
+    assert.entityCount("Game", 2)
+  })
+
+  test("handleGameStarted and handleGameReleased with same requestId merge into one Game entity", () => {
+    clearStore()
+
+    let requestId = BigInt.fromI32(1)
+    let playerAddress = Address.fromString("0x0000000000000000000000000000000000000001")
+    let bet = BigInt.fromI32(5000)
+    let coef = BigInt.fromI32(200)
+    let payout = BigInt.fromI32(1000)
+    let randomNumber = BigInt.fromI32(12345)
+    let x = BigInt.fromI32(5)
+
+    // First, handle GameStarted event
+    let gameStartedEvent = createGameStartedEvent(
+      requestId,
+      playerAddress,
+      bet,
+      coef
+    )
+    gameStartedEvent.block.number = BigInt.fromI32(100)
+    gameStartedEvent.block.timestamp = BigInt.fromI32(1000)
+    gameStartedEvent.transaction.hash = Bytes.fromHexString("0x1111111111111111111111111111111111111111111111111111111111111111")
+    gameStartedEvent.logIndex = BigInt.fromI32(0)
+
+    handleGameStarted(gameStartedEvent)
+
+    // Then, handle GameReleased event with the same requestId
+    let gameReleasedEvent = createGameReleasedEvent(
+      requestId,
+      playerAddress,
+      payout,
+      randomNumber,
+      x
+    )
+    gameReleasedEvent.block.number = BigInt.fromI32(200)
+    gameReleasedEvent.block.timestamp = BigInt.fromI32(2000)
+    gameReleasedEvent.transaction.hash = Bytes.fromHexString("0x2222222222222222222222222222222222222222222222222222222222222222")
+    gameReleasedEvent.logIndex = BigInt.fromI32(0)
+
+    handleGameReleased(gameReleasedEvent)
+
+    let gameId = requestId.toString()
+
+    // Should have only one Game entity with both started and released data
+    assert.entityCount("Game", 1)
+    assert.fieldEquals("Game", gameId, "requestId", requestId.toString())
+    assert.fieldEquals("Game", gameId, "playerAddress", playerAddress.toHexString())
+    assert.fieldEquals("Game", gameId, "bet", bet.toString())
+    assert.fieldEquals("Game", gameId, "coef", coef.toString())
+    assert.fieldEquals("Game", gameId, "payout", payout.toString())
+    assert.fieldEquals("Game", gameId, "randomNumber", randomNumber.toString())
+    assert.fieldEquals("Game", gameId, "x", x.toString())
+    assert.fieldEquals("Game", gameId, "startedBlockNumber", gameStartedEvent.block.number.toString())
+    assert.fieldEquals("Game", gameId, "releasedBlockNumber", gameReleasedEvent.block.number.toString())
   })
 })
 

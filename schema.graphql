@@ -1,24 +1,22 @@
-type GameReleased @entity(immutable: false) {
-  id: ID!
+type Game @entity(immutable: false) {
+  id: ID! # requestId as string
   requestId: BigInt!
   playerAddress: Bytes!
-  payout: BigInt!
-  randomNumber: BigInt!
-  x: BigInt!
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
 
-type GameStarted @entity(immutable: false) {
-  id: ID!
-  requestId: BigInt!
-  playerAddress: Bytes!
-  bet: BigInt!
-  coef: BigInt!
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
+  # Fields from GameStarted
+  bet: BigInt
+  coef: BigInt
+  startedBlockNumber: BigInt
+  startedBlockTimestamp: BigInt
+  startedTransactionHash: Bytes
+
+  # Fields from GameReleased
+  payout: BigInt
+  randomNumber: BigInt
+  x: BigInt
+  releasedBlockNumber: BigInt
+  releasedBlockTimestamp: BigInt
+  releasedTransactionHash: Bytes
 }
 
 type VaultSnapshot @entity(immutable: false) {
