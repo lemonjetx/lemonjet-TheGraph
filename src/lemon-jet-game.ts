@@ -8,7 +8,7 @@ import { Game, VaultSnapshot } from "../generated/schema"
 import { LemonJetGame } from "../generated/LemonJetGame/LemonJetGame"
 import { Address, ethereum, BigInt } from "@graphprotocol/graph-ts"
 
-const PROXY_ADDRESS = Address.fromString("0x28f4df2bd04587f0fd979117f46af9cf1f03ddc2")
+const PROXY_ADDRESS = Address.fromString("0xf36fed68017F6E84D2EB1D4bD35AB56ae0cD914a")
 const SECONDS_PER_DAY = BigInt.fromI32(86400) // 24 * 60 * 60
 
 function saveVaultSnapshot(event: ethereum.Event): void {
