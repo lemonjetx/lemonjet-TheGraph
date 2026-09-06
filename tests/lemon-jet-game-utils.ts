@@ -4,7 +4,9 @@ import {
   GameReleased,
   GameStarted,
   Deposit,
-  Withdraw
+  Withdraw,
+  ReferrerSettled,
+  ReferrerRewardIssued
 } from "../generated/LemonJetGame/LemonJetGame"
 
 export function createGameReleasedEvent(
@@ -134,3 +136,46 @@ export function createWithdrawEvent(
   return withdrawEvent
 }
 
+
+export function createReferrerSettledEvent(
+  referee: Address,
+  referrer: Address
+): ReferrerSettled {
+  let referrerSettledEvent = changetype<ReferrerSettled>(newMockEvent())
+
+  referrerSettledEvent.parameters = []
+
+  referrerSettledEvent.parameters.push(
+    new ethereum.EventParam("referee", ethereum.Value.fromAddress(referee))
+  )
+  referrerSettledEvent.parameters.push(
+    new ethereum.EventParam("referrer", ethereum.Value.fromAddress(referrer))
+  )
+
+  return referrerSettledEvent
+}
+
+export function createReferrerRewardIssuedEvent(
+  referrer: Address,
+  player: Address,
+  rewardAmount: BigInt
+): ReferrerRewardIssued {
+  let referrerRewardIssuedEvent = changetype<ReferrerRewardIssued>(newMockEvent())
+
+  referrerRewardIssuedEvent.parameters = []
+
+  referrerRewardIssuedEvent.parameters.push(
+    new ethereum.EventParam("referrer", ethereum.Value.fromAddress(referrer))
+  )
+  referrerRewardIssuedEvent.parameters.push(
+    new ethereum.EventParam("player", ethereum.Value.fromAddress(player))
+  )
+  referrerRewardIssuedEvent.parameters.push(
+    new ethereum.EventParam(
+      "rewardAmount",
+      ethereum.Value.fromUnsignedBigInt(rewardAmount)
+    )
+  )
+
+  return referrerRewardIssuedEvent
+}
