@@ -28,3 +28,42 @@ type VaultSnapshot @entity(immutable: false) {
   transactionHash: Bytes!
   day: BigInt!
 }
+
+type Referrer @entity(immutable: false) {
+  id: ID!
+  address: Bytes!
+  totalRewardAssets: BigInt!
+  rewardCount: Int!
+  referredPlayers: Int!
+  referredWallets: Int!
+  firstRewardAt: BigInt
+  lastRewardAt: BigInt
+  rewards: [ReferralReward!]! @derivedFrom(field: "referrer")
+  referrals: [Referral!]! @derivedFrom(field: "referrer")
+}
+
+type Referral @entity(immutable: false) {
+  id: ID!
+  referee: Bytes!
+  referrer: Referrer!
+  totalRewardAssets: BigInt!
+  rewardCount: Int!
+  settledBlockNumber: BigInt
+  settledBlockTimestamp: BigInt
+  settledTransactionHash: Bytes
+  firstRewardAt: BigInt
+  lastRewardAt: BigInt
+  rewards: [ReferralReward!]! @derivedFrom(field: "referral")
+}
+
+type ReferralReward @entity(immutable: true) {
+  id: ID!
+  referrer: Referrer!
+  referral: Referral!
+  player: Bytes!
+  assets: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  logIndex: BigInt!
+}

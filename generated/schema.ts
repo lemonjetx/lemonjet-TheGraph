@@ -384,3 +384,525 @@ export class VaultSnapshot extends Entity {
     this.set("day", Value.fromBigInt(value));
   }
 }
+
+export class Referrer extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save Referrer entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type Referrer must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("Referrer", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): Referrer | null {
+    return changetype<Referrer | null>(store.get_in_block("Referrer", id));
+  }
+
+  static load(id: string): Referrer | null {
+    return changetype<Referrer | null>(store.get("Referrer", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get address(): Bytes {
+    let value = this.get("address");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set address(value: Bytes) {
+    this.set("address", Value.fromBytes(value));
+  }
+
+  get totalRewardAssets(): BigInt {
+    let value = this.get("totalRewardAssets");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalRewardAssets(value: BigInt) {
+    this.set("totalRewardAssets", Value.fromBigInt(value));
+  }
+
+  get rewardCount(): i32 {
+    let value = this.get("rewardCount");
+    if (!value || value.kind == ValueKind.NULL) {
+      return 0;
+    } else {
+      return value.toI32();
+    }
+  }
+
+  set rewardCount(value: i32) {
+    this.set("rewardCount", Value.fromI32(value));
+  }
+
+  get referredPlayers(): i32 {
+    let value = this.get("referredPlayers");
+    if (!value || value.kind == ValueKind.NULL) {
+      return 0;
+    } else {
+      return value.toI32();
+    }
+  }
+
+  set referredPlayers(value: i32) {
+    this.set("referredPlayers", Value.fromI32(value));
+  }
+
+  get referredWallets(): i32 {
+    let value = this.get("referredWallets");
+    if (!value || value.kind == ValueKind.NULL) {
+      return 0;
+    } else {
+      return value.toI32();
+    }
+  }
+
+  set referredWallets(value: i32) {
+    this.set("referredWallets", Value.fromI32(value));
+  }
+
+  get firstRewardAt(): BigInt | null {
+    let value = this.get("firstRewardAt");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set firstRewardAt(value: BigInt | null) {
+    if (!value) {
+      this.unset("firstRewardAt");
+    } else {
+      this.set("firstRewardAt", Value.fromBigInt(<BigInt>value));
+    }
+  }
+
+  get lastRewardAt(): BigInt | null {
+    let value = this.get("lastRewardAt");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set lastRewardAt(value: BigInt | null) {
+    if (!value) {
+      this.unset("lastRewardAt");
+    } else {
+      this.set("lastRewardAt", Value.fromBigInt(<BigInt>value));
+    }
+  }
+
+  get rewards(): ReferralRewardLoader {
+    return new ReferralRewardLoader(
+      "Referrer",
+      this.get("id")!.toString(),
+      "rewards",
+    );
+  }
+
+  get referrals(): ReferralLoader {
+    return new ReferralLoader(
+      "Referrer",
+      this.get("id")!.toString(),
+      "referrals",
+    );
+  }
+}
+
+export class Referral extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save Referral entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type Referral must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("Referral", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): Referral | null {
+    return changetype<Referral | null>(store.get_in_block("Referral", id));
+  }
+
+  static load(id: string): Referral | null {
+    return changetype<Referral | null>(store.get("Referral", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get referee(): Bytes {
+    let value = this.get("referee");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set referee(value: Bytes) {
+    this.set("referee", Value.fromBytes(value));
+  }
+
+  get referrer(): string {
+    let value = this.get("referrer");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set referrer(value: string) {
+    this.set("referrer", Value.fromString(value));
+  }
+
+  get totalRewardAssets(): BigInt {
+    let value = this.get("totalRewardAssets");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalRewardAssets(value: BigInt) {
+    this.set("totalRewardAssets", Value.fromBigInt(value));
+  }
+
+  get rewardCount(): i32 {
+    let value = this.get("rewardCount");
+    if (!value || value.kind == ValueKind.NULL) {
+      return 0;
+    } else {
+      return value.toI32();
+    }
+  }
+
+  set rewardCount(value: i32) {
+    this.set("rewardCount", Value.fromI32(value));
+  }
+
+  get settledBlockNumber(): BigInt | null {
+    let value = this.get("settledBlockNumber");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set settledBlockNumber(value: BigInt | null) {
+    if (!value) {
+      this.unset("settledBlockNumber");
+    } else {
+      this.set("settledBlockNumber", Value.fromBigInt(<BigInt>value));
+    }
+  }
+
+  get settledBlockTimestamp(): BigInt | null {
+    let value = this.get("settledBlockTimestamp");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set settledBlockTimestamp(value: BigInt | null) {
+    if (!value) {
+      this.unset("settledBlockTimestamp");
+    } else {
+      this.set("settledBlockTimestamp", Value.fromBigInt(<BigInt>value));
+    }
+  }
+
+  get settledTransactionHash(): Bytes | null {
+    let value = this.get("settledTransactionHash");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set settledTransactionHash(value: Bytes | null) {
+    if (!value) {
+      this.unset("settledTransactionHash");
+    } else {
+      this.set("settledTransactionHash", Value.fromBytes(<Bytes>value));
+    }
+  }
+
+  get firstRewardAt(): BigInt | null {
+    let value = this.get("firstRewardAt");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set firstRewardAt(value: BigInt | null) {
+    if (!value) {
+      this.unset("firstRewardAt");
+    } else {
+      this.set("firstRewardAt", Value.fromBigInt(<BigInt>value));
+    }
+  }
+
+  get lastRewardAt(): BigInt | null {
+    let value = this.get("lastRewardAt");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set lastRewardAt(value: BigInt | null) {
+    if (!value) {
+      this.unset("lastRewardAt");
+    } else {
+      this.set("lastRewardAt", Value.fromBigInt(<BigInt>value));
+    }
+  }
+
+  get rewards(): ReferralRewardLoader {
+    return new ReferralRewardLoader(
+      "Referral",
+      this.get("id")!.toString(),
+      "rewards",
+    );
+  }
+}
+
+export class ReferralReward extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save ReferralReward entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type ReferralReward must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("ReferralReward", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): ReferralReward | null {
+    return changetype<ReferralReward | null>(
+      store.get_in_block("ReferralReward", id),
+    );
+  }
+
+  static load(id: string): ReferralReward | null {
+    return changetype<ReferralReward | null>(store.get("ReferralReward", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get referrer(): string {
+    let value = this.get("referrer");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set referrer(value: string) {
+    this.set("referrer", Value.fromString(value));
+  }
+
+  get referral(): string {
+    let value = this.get("referral");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set referral(value: string) {
+    this.set("referral", Value.fromString(value));
+  }
+
+  get player(): Bytes {
+    let value = this.get("player");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set player(value: Bytes) {
+    this.set("player", Value.fromBytes(value));
+  }
+
+  get assets(): BigInt {
+    let value = this.get("assets");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set assets(value: BigInt) {
+    this.set("assets", Value.fromBigInt(value));
+  }
+
+  get blockNumber(): BigInt {
+    let value = this.get("blockNumber");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set blockNumber(value: BigInt) {
+    this.set("blockNumber", Value.fromBigInt(value));
+  }
+
+  get blockTimestamp(): BigInt {
+    let value = this.get("blockTimestamp");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set blockTimestamp(value: BigInt) {
+    this.set("blockTimestamp", Value.fromBigInt(value));
+  }
+
+  get transactionHash(): Bytes {
+    let value = this.get("transactionHash");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set transactionHash(value: Bytes) {
+    this.set("transactionHash", Value.fromBytes(value));
+  }
+
+  get logIndex(): BigInt {
+    let value = this.get("logIndex");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set logIndex(value: BigInt) {
+    this.set("logIndex", Value.fromBigInt(value));
+  }
+}
+
+export class ReferralRewardLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): ReferralReward[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<ReferralReward[]>(value);
+  }
+}
+
+export class ReferralLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): Referral[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<Referral[]>(value);
+  }
+}

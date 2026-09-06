@@ -8,12 +8,21 @@ import {
   createMockedFunction
 } from "matchstick-as"
 import {Address, BigInt, ethereum, Bytes} from "@graphprotocol/graph-ts"
-import {handleGameReleased, handleGameStarted, handleDeposit, handleWithdraw} from "../src/lemon-jet-game"
+import {
+  handleGameReleased,
+  handleGameStarted,
+  handleDeposit,
+  handleWithdraw,
+  handleReferrerSettled,
+  handleReferrerRewardIssued
+} from "../src/lemon-jet-game"
 import {
   createGameReleasedEvent,
   createGameStartedEvent,
   createDepositEvent,
-  createWithdrawEvent
+  createWithdrawEvent,
+  createReferrerSettledEvent,
+  createReferrerRewardIssuedEvent
 } from "./lemon-jet-game-utils"
 
 const PROXY_ADDRESS = Address.fromString("0xf36fed68017F6E84D2EB1D4bD35AB56ae0cD914a")
@@ -482,3 +491,128 @@ describe("LemonJetGame Event Handlers", () => {
   })
 })
 
+
+const REFERRER_ADDRESS = Address.fromString("0x867f932d4be792239bce45a1e576118debb7c750")
+const FIRST_PLAYER = Address.fromString("0x00000000000000000000000000000000000000a1")
+const SECOND_PLAYER = Address.fromString("0x00000000000000000000000000000000000000a2")
+
+describe("Referral Event Handlers", () => {
+  afterAll(() => {
+    clearStore()
+  })
+
+  test("handleReferrerSettled links the referral and counts the wallet once", () => {
+    clearStore()
+
+    let settledEvent = createReferrerSettledEvent(FIRST_PLAYER, REFERRER_ADDRESS)
+    settledEvent.block.number = BigInt.fromI32(50829447)
+    settledEvent.block.timestamp = BigInt.fromI32(1788000000)
+    settledEvent.transaction.hash = Bytes.fromHexString("0x1111111111111111111111111111111111111111111111111111111111111111")
+    settledEvent.logIndex = BigInt.fromI32(2)
+
+    handleReferrerSettled(settledEvent)
+    handleReferrerSettled(settledEvent)
+
+    assert.entityCount("Referrer", 1)
+    assert.entityCount("Referral", 1)
+    assert.fieldEquals("Referrer", REFERRER_ADDRESS.toHexString(), "referredWallets", "1")
+    assert.fieldEquals("Referrer", REFERRER_ADDRESS.toHexString(), "referredPlayers", "0")
+    assert.fieldEquals("Referrer", REFERRER_ADDRESS.toHexString(), "rewardCount", "0")
+    assert.fieldEquals("Referrer", REFERRER_ADDRESS.toHexString(), "totalRewardAssets", "0")
+    assert.fieldEquals("Referrer", REFERRER_ADDRESS.toHexString(), "address", REFERRER_ADDRESS.toHexString())
+
+    let referralId = FIRST_PLAYER.toHexString()
+    assert.fieldEquals("Referral", referralId, "referrer", REFERRER_ADDRESS.toHexString())
+    assert.fieldEquals("Referral", referralId, "referee", FIRST_PLAYER.toHexString())
+    assert.fieldEquals("Referral", referralId, "settledBlockNumber", "50829447")
+    assert.fieldEquals("Referral", referralId, "settledBlockTimestamp", "1788000000")
+    assert.fieldEquals("Referral", referralId, "rewardCount", "0")
+  })
+
+  test("handleReferrerRewardIssued accumulates the exact assets per referrer", () => {
+    clearStore()
+
+    let settledEvent = createReferrerSettledEvent(FIRST_PLAYER, REFERRER_ADDRESS)
+    settledEvent.block.number = BigInt.fromI32(50829447)
+    settledEvent.block.timestamp = BigInt.fromI32(1788000000)
+    handleReferrerSettled(settledEvent)
+
+    let firstReward = createReferrerRewardIssuedEvent(
+      REFERRER_ADDRESS,
+      FIRST_PLAYER,
+      BigInt.fromString("30000000000000000")
+    )
+    firstReward.block.number = BigInt.fromI32(50829447)
+    firstReward.block.timestamp = BigInt.fromI32(1788000000)
+    firstReward.transaction.hash = Bytes.fromHexString("0x2222222222222222222222222222222222222222222222222222222222222222")
+    firstReward.logIndex = BigInt.fromI32(3)
+
+    let secondReward = createReferrerRewardIssuedEvent(
+      REFERRER_ADDRESS,
+      FIRST_PLAYER,
+      BigInt.fromString("45000000000000000")
+    )
+    secondReward.block.number = BigInt.fromI32(50829500)
+    secondReward.block.timestamp = BigInt.fromI32(1788000100)
+    secondReward.transaction.hash = Bytes.fromHexString("0x3333333333333333333333333333333333333333333333333333333333333333")
+    secondReward.logIndex = BigInt.fromI32(7)
+
+    handleReferrerRewardIssued(firstReward)
+    handleReferrerRewardIssued(secondReward)
+
+    assert.entityCount("ReferralReward", 2)
+    assert.fieldEquals("Referrer", REFERRER_ADDRESS.toHexString(), "rewardCount", "2")
+    assert.fieldEquals("Referrer", REFERRER_ADDRESS.toHexString(), "referredPlayers", "1")
+    assert.fieldEquals("Referrer", REFERRER_ADDRESS.toHexString(), "referredWallets", "1")
+    assert.fieldEquals("Referrer", REFERRER_ADDRESS.toHexString(), "totalRewardAssets", "75000000000000000")
+    assert.fieldEquals("Referrer", REFERRER_ADDRESS.toHexString(), "firstRewardAt", "1788000000")
+    assert.fieldEquals("Referrer", REFERRER_ADDRESS.toHexString(), "lastRewardAt", "1788000100")
+
+    let referralId = FIRST_PLAYER.toHexString()
+    assert.fieldEquals("Referral", referralId, "rewardCount", "2")
+    assert.fieldEquals("Referral", referralId, "totalRewardAssets", "75000000000000000")
+    assert.fieldEquals("Referral", referralId, "lastRewardAt", "1788000100")
+
+    let rewardId = secondReward.transaction.hash.toHexString() + "-7"
+    assert.fieldEquals("ReferralReward", rewardId, "referrer", REFERRER_ADDRESS.toHexString())
+    assert.fieldEquals("ReferralReward", rewardId, "referral", referralId)
+    assert.fieldEquals("ReferralReward", rewardId, "player", FIRST_PLAYER.toHexString())
+    assert.fieldEquals("ReferralReward", rewardId, "assets", "45000000000000000")
+    assert.fieldEquals("ReferralReward", rewardId, "blockNumber", "50829500")
+    assert.fieldEquals("ReferralReward", rewardId, "logIndex", "7")
+  })
+
+  test("handleReferrerRewardIssued counts a player without a settled referral", () => {
+    clearStore()
+
+    let firstPlayerReward = createReferrerRewardIssuedEvent(
+      REFERRER_ADDRESS,
+      FIRST_PLAYER,
+      BigInt.fromString("30000000000000000")
+    )
+    firstPlayerReward.block.number = BigInt.fromI32(50829447)
+    firstPlayerReward.block.timestamp = BigInt.fromI32(1788000000)
+    firstPlayerReward.transaction.hash = Bytes.fromHexString("0x4444444444444444444444444444444444444444444444444444444444444444")
+    firstPlayerReward.logIndex = BigInt.fromI32(1)
+
+    let secondPlayerReward = createReferrerRewardIssuedEvent(
+      REFERRER_ADDRESS,
+      SECOND_PLAYER,
+      BigInt.fromString("30000000000000000")
+    )
+    secondPlayerReward.block.number = BigInt.fromI32(50829448)
+    secondPlayerReward.block.timestamp = BigInt.fromI32(1788000002)
+    secondPlayerReward.transaction.hash = Bytes.fromHexString("0x5555555555555555555555555555555555555555555555555555555555555555")
+    secondPlayerReward.logIndex = BigInt.fromI32(1)
+
+    handleReferrerRewardIssued(firstPlayerReward)
+    handleReferrerRewardIssued(secondPlayerReward)
+
+    assert.entityCount("Referral", 2)
+    assert.fieldEquals("Referrer", REFERRER_ADDRESS.toHexString(), "referredPlayers", "2")
+    assert.fieldEquals("Referrer", REFERRER_ADDRESS.toHexString(), "referredWallets", "0")
+    assert.fieldEquals("Referrer", REFERRER_ADDRESS.toHexString(), "rewardCount", "2")
+    assert.fieldEquals("Referrer", REFERRER_ADDRESS.toHexString(), "totalRewardAssets", "60000000000000000")
+    assert.fieldEquals("Referral", SECOND_PLAYER.toHexString(), "referrer", REFERRER_ADDRESS.toHexString())
+  })
+})

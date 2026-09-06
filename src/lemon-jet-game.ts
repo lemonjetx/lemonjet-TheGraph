@@ -2,9 +2,17 @@ import {
   GameReleased as GameReleasedEvent,
   GameStarted as GameStartedEvent,
   Deposit as DepositEvent,
-  Withdraw as WithdrawEvent
+  Withdraw as WithdrawEvent,
+  ReferrerSettled as ReferrerSettledEvent,
+  ReferrerRewardIssued as ReferrerRewardIssuedEvent
 } from "../generated/LemonJetGame/LemonJetGame"
-import { Game, VaultSnapshot } from "../generated/schema"
+import {
+  Game,
+  Referral,
+  ReferralReward,
+  Referrer,
+  VaultSnapshot
+} from "../generated/schema"
 import { LemonJetGame } from "../generated/LemonJetGame/LemonJetGame"
 import { Address, ethereum, BigInt } from "@graphprotocol/graph-ts"
 
@@ -80,4 +88,92 @@ export function handleDeposit(event: DepositEvent): void {
 
 export function handleWithdraw(event: WithdrawEvent): void {
   saveVaultSnapshot(event)
+}
+
+function loadOrCreateReferrer(address: Address): Referrer {
+  let id = address.toHexString()
+  let referrer = Referrer.load(id)
+
+  if (referrer == null) {
+    referrer = new Referrer(id)
+    referrer.address = address
+    referrer.totalRewardAssets = BigInt.zero()
+    referrer.rewardCount = 0
+    referrer.referredPlayers = 0
+    referrer.referredWallets = 0
+  }
+
+  return referrer as Referrer
+}
+
+function loadOrCreateReferral(referee: Address, referrer: Referrer): Referral {
+  let id = referee.toHexString()
+  let referral = Referral.load(id)
+
+  if (referral == null) {
+    referral = new Referral(id)
+    referral.referee = referee
+    referral.referrer = referrer.id
+    referral.totalRewardAssets = BigInt.zero()
+    referral.rewardCount = 0
+  }
+
+  return referral as Referral
+}
+
+export function handleReferrerSettled(event: ReferrerSettledEvent): void {
+  let referrer = loadOrCreateReferrer(event.params.referrer)
+  let referral = loadOrCreateReferral(event.params.referee, referrer)
+
+  if (referral.settledBlockNumber === null) {
+    referrer.referredWallets = referrer.referredWallets + 1
+  }
+
+  referral.settledBlockNumber = event.block.number
+  referral.settledBlockTimestamp = event.block.timestamp
+  referral.settledTransactionHash = event.transaction.hash
+  referral.save()
+
+  referrer.save()
+}
+
+export function handleReferrerRewardIssued(event: ReferrerRewardIssuedEvent): void {
+  let referrer = loadOrCreateReferrer(event.params.referrer)
+  let referral = loadOrCreateReferral(event.params.player, referrer)
+  let rewardAmount = event.params.rewardAmount
+
+  let reward = new ReferralReward(
+    event.transaction.hash.toHexString() + "-" + event.logIndex.toString()
+  )
+  reward.referrer = referrer.id
+  reward.referral = referral.id
+  reward.player = event.params.player
+  reward.assets = rewardAmount
+  reward.blockNumber = event.block.number
+  reward.blockTimestamp = event.block.timestamp
+  reward.transactionHash = event.transaction.hash
+  reward.logIndex = event.logIndex
+  reward.save()
+
+  if (referral.rewardCount == 0) {
+    referrer.referredPlayers = referrer.referredPlayers + 1
+  }
+
+  if (referral.firstRewardAt === null) {
+    referral.firstRewardAt = event.block.timestamp
+  }
+
+  referral.rewardCount = referral.rewardCount + 1
+  referral.totalRewardAssets = referral.totalRewardAssets.plus(rewardAmount)
+  referral.lastRewardAt = event.block.timestamp
+  referral.save()
+
+  if (referrer.firstRewardAt === null) {
+    referrer.firstRewardAt = event.block.timestamp
+  }
+
+  referrer.rewardCount = referrer.rewardCount + 1
+  referrer.totalRewardAssets = referrer.totalRewardAssets.plus(rewardAmount)
+  referrer.lastRewardAt = event.block.timestamp
+  referrer.save()
 }
